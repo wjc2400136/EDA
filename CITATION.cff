@@ -1,0 +1,8 @@
+cff-version: 1.2.0
+message: "Citation metadata will be completed after peer review."
+title: "Enhanced Deformation Attack Reproducibility Package"
+type: software
+version: "review-v1"
+license: MIT
+authors:
+  - name: Anonymous Authors

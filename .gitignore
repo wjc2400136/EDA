@@ -1,0 +1,70 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+
+# Editors and operating systems
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Local environments and credentials
+.venv/
+venv/
+env/
+.conda/
+.env
+.env.*
+!.env.example
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+
+# Datasets and generated image collections
+data/images/
+data_imagenet_val/
+data_imagenetv2_matched/
+imagenet-val/
+imagenetv2-*/
+
+# Checkpoints and model caches
+checkpoints/*
+!checkpoints/README.md
+!checkpoints/README.zh-CN.md
+*.pth
+*.pt
+*.ckpt
+*.safetensors
+*.onnx
+*.h5
+*.pb
+robustbench_models/
+
+# Experiment outputs
+outputs/*
+!outputs/.gitkeep
+results/
+seed_stability/
+budget_targeted_sensitivity/
+modern_robustbench_eval/
+perceptual_quality/
+feature_cam_metrics/
+parts_ablation/
+layout_ablation/
+expansion_ablation/
+appearance_ablation/
+imagenet_val_generalization/
+imagenetv2_generalization/
+
+# VLM inputs, raw provider responses, and generated prompts
+vlm_eval/images/
+vlm_eval/results/
+vlm_eval/prompts.txt

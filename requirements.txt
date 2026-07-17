@@ -1,0 +1,11 @@
+--extra-index-url https://download.pytorch.org/whl/cu116
+torch==1.12.1+cu116
+torchvision==0.13.1+cu116
+numpy<2
+pandas>=1.4
+pillow>=9
+tqdm>=4.64
+timm==0.6.12
+scikit-optimize>=0.9
+matplotlib>=3.5
+scipy>=1.8

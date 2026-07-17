@@ -1,0 +1,10 @@
+# Install after requirements.txt when the corresponding evaluations are needed.
+robustbench
+lpips
+grad-cam
+scikit-image
+openai
+
+# Optional metrics used by the perceptual script. Install pyiqa in a separate
+# environment if its resolver attempts to replace the pinned PyTorch build.
+# pyiqa

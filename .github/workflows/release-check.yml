@@ -1,0 +1,24 @@
+name: Release package checks
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Check release contents
+        run: python tools/check_release.py
+
+      - name: Compile Python sources
+        run: python -m compileall -q experiments transferattack tools
+
