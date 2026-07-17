@@ -19,4 +19,4 @@ models through RobustBench. Use `--model_dir ./checkpoints/robustbench
 `run_robust_table.py` covers legacy defenses and may require checkpoints from
 their original authors. Record the source URL and checksum for every manually
 downloaded checkpoint. The RobustBench runner is the recommended self-contained
-defense evaluation for the revision.
+workflow for evaluating modern robust targets.

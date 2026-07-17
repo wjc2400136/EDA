@@ -3,7 +3,7 @@
 [English](CONTRIBUTING.md) | [简体中文](CONTRIBUTING.zh-CN.md)
 
 Contributions that improve reproducibility, portability, documentation, or
-error reporting are welcome after the repository becomes public.
+error reporting are welcome.
 
 Before opening an issue, include the operating system, Python/PyTorch/CUDA/timm
 versions, GPU model, command, dataset schema, and complete traceback. Do not
@@ -20,4 +20,3 @@ For pull requests:
 
 Security-sensitive reports, especially accidental credential exposure, should
 be sent privately to the repository maintainers rather than posted publicly.
-

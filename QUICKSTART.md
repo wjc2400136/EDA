@@ -1,11 +1,11 @@
-# Anonymous Reviewer Quick Start
+# Quick Start
 
-[English](REVIEWER_QUICKSTART.md) | [Simplified Chinese](REVIEWER_QUICKSTART.zh-CN.md)
+[English](QUICKSTART.md) | [Simplified Chinese](QUICKSTART.zh-CN.md)
 
-This is the identity-scrubbed `review-v1` snapshot corresponding to the revised
-manuscript. Dataset images, model weights, generated outputs, provider responses,
-and API credentials are intentionally excluded. Their preparation is documented
-in [`data/README.md`](data/README.md) and
+This package contains the code and documentation needed to reproduce the EDA
+experiments. Dataset images, model weights, generated outputs, provider responses,
+and API credentials are not bundled. Their preparation is documented in
+[`data/README.md`](data/README.md) and
 [`checkpoints/README.md`](checkpoints/README.md).
 
 ## 1. Install
@@ -36,7 +36,7 @@ The paper setting is `epsilon=16/255`, `T=10`, `alpha=1.6/255`, `mu=1`, and
 seed 42. `num_warping=25` is the number of transformed views averaged per attack
 iteration, not the number of attack iterations.
 
-## 4. Reproduce revision experiments
+## 4. Run extended evaluations
 
 Commands for multiple budgets, targeted transfer, five-seed stability,
 RobustBench evaluation, perceptual quality, generalization, ablations, and VLM
@@ -49,4 +49,4 @@ the included evaluation and aggregation code.
 
 Generated files are written under `outputs/` and are excluded from version
 control. Run `python tools/check_release.py` before comparing or redistributing
-the snapshot. See [`README.md`](README.md) for the complete protocol.
+the package. See [`README.md`](README.md) for the complete protocol.

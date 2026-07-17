@@ -6,7 +6,9 @@
 Deformation Attack** 的独立复现代码包，包含 EDA、五种对比攻击，以及主实验、
 消融实验、现代鲁棒模型、跨数据集泛化、感知质量和 VLM 定量评估所需脚本。
 
-该目录由原工程复制整理而成。运行或修改这里的文件不会改动包外的作者工作代码。
+该目录为独立复现代码包，运行或修改其中的文件不会影响包外的工程目录。
+
+最小端到端流程见 [`QUICKSTART.zh-CN.md`](QUICKSTART.zh-CN.md)。
 
 ## 1. 目录结构
 
@@ -31,7 +33,6 @@ EDA_reproducibility_package/
 - [模型权重与缓存](checkpoints/README.zh-CN.md)
 - [VLM 定量评估协议](docs/VLM_EVALUATION.zh-CN.md)
 - [实验脚本索引](docs/SCRIPT_INDEX.zh-CN.md)
-- [审稿期与公开发布流程](docs/REVIEW_RELEASE_WORKFLOW.zh-CN.md)
 
 ## 2. 环境配置
 
@@ -155,7 +156,7 @@ EDA 的 `num_warping` 表示**每次攻击迭代中独立生成并用于梯度�
 组合及一个基础梯度，因此这里只对齐采样复杂度，不声称所有方法具有完全相同的
 运行时间或内部反向传播结构。
 
-## 7. 大修新增实验
+## 7. 扩展评估
 
 ### 多预算和目标攻击
 
@@ -170,15 +171,15 @@ python experiments/run_budget_targeted_eda.py \
   --mode targeted_both --attacks l2t,bsr,decowa,ops,sid,eda \
   --input_dir ./data --output_dir ./outputs/budget_targeted --GPU_ID 0
 
-# 所有对抗样本生成完毕后：先审计，再只评估并输出完整总表
+# 所有对抗样本生成完毕后：先检查，再只评估并输出完整总表
 python experiments/run_budget_targeted_eda.py \
   --mode audit --input_dir ./data --output_dir ./outputs/budget_targeted
 python experiments/run_budget_targeted_eda.py \
   --mode full_eval --input_dir ./data --output_dir ./outputs/budget_targeted --GPU_ID 0
 ```
 
-默认预算为 `4/255,8/255,12/255,16/255`。`corrected_both` 是针对旧结果的
-恢复模式，只重跑 BSR、DeCoWA 和 SID，不等价于六种方法的完整重跑。
+默认预算为 `4/255,8/255,12/255,16/255`。完整复现应使用上述
+`untargeted_both` 和 `targeted_both` 模式。
 `full_eval` 不会重新生成对抗样本；它会先核验 192 个生成案例，再用 20 个目标
 模型评估六种方法，并输出完整 CSV 和 LaTeX 总表。只有从中断的评估 CSV 续跑时
 才添加 `--reuse_existing`。
@@ -227,7 +228,7 @@ python experiments/run_perceptual_quality_eda.py \
 
 ## 9. VLM 定量评估
 
-VLM 实验会产生外部服务费用，不要求为了公开代码再次调用。复现包包含：
+VLM 实验会产生外部服务费用。检查已有结果及聚合流程不需要再次调用服务商。复现包包含：
 
 - 固定 100 张图像的准备脚本；
 - 完整固定 prompt；
@@ -240,25 +241,7 @@ API 密钥只能通过环境变量传入，不能写入 Python、Markdown 或提
 不能表述为完全相同条件下的五个随机种子重复。详细协议见
 [VLM 文档](docs/VLM_EVALUATION.zh-CN.md)。
 
-## 10. 审稿期代码可访问性
-
-只有作者可访问的 Private GitHub 不作为唯一审稿代码入口。返修时应同时提供匿名
-只读仓库或随稿上传的完整补充代码压缩包，使审稿人无需联系作者即可访问本次实验
-使用的固定快照。论文接收后，再把同一快照公开并创建带版本号的长期归档。具体
-步骤和可直接用于回复信的英文措辞见
-[审稿期与公开发布流程](docs/REVIEW_RELEASE_WORKFLOW.zh-CN.md)。
-
-生成去身份化审稿目录、ZIP 和 SHA-256：
-
-```bash
-python tools/build_anonymous_snapshot.py --force
-```
-
-不要把当前包含真实作者元数据的复现包根目录直接交给匿名服务。匿名仓库只提交
-`dist/eda-review-anonymous/` 中的内容；Editorial Manager 补充代码使用
-`dist/eda-review-anonymous.zip`。
-
-## 11. 提交或公开前检查
+## 10. 复现包检查
 
 1. 确认 `data/images/`、模型权重和大型输出未提交。
 2. 运行绝对路径和 API 密钥扫描。
@@ -268,7 +251,7 @@ python tools/build_anonymous_snapshot.py --force
 6. 在代码仓库中提供 README、环境文件、数据准备、命令示例和随机种子。
 7. 对第三方数据和模型仅提供下载说明，不重新分发无授权文件。
 
-提交或生成审稿压缩包前执行：
+运行实验或重新分发代码包前执行：
 
 ```bash
 python tools/check_release.py

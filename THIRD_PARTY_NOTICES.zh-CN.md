@@ -10,7 +10,7 @@
 攻击框架和部分攻击实现源自 Trustworthy-AI-Group 的 TransferAttack 项目。仓库
 保留了上游版权声明和 MIT License。
 
-EDA 实现、大修实验 runner、复现文档及相关评估工具包含 本文作者 在 2026 年完成的新增和修改。
+EDA 实现、实验 runner、复现文档及相关评估工具包含 本项目贡献者 在 2026 年完成的新增和修改。
 
 ## 运行依赖
 
@@ -28,4 +28,3 @@ ImageNet、NIPS 2017 ImageNet-Compatible Dataset、ImageNet-V2、预训练模型
 
 仓库为了科研比较包含若干已发表攻击方法的实现。论文和源代码中给出了对应引用。
 如需单独重新分发某一方法实现，还应核查该方法原始项目的许可证。
-

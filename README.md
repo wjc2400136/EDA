@@ -6,7 +6,9 @@ This standalone package accompanies **Boosting Cross-Model Adversarial
 Transferability by Enhanced Deformation Attack**. It contains EDA, the five
 compared transfer attacks, and scripts for the main, ablation, robustness,
 generalization, perceptual-quality, and VLM experiments. It is an isolated copy;
-using it does not modify the authors' working code outside this directory.
+using it does not modify files outside this directory.
+
+For a minimal end-to-end workflow, start with [`QUICKSTART.md`](QUICKSTART.md).
 
 ## Contents
 
@@ -82,25 +84,6 @@ Detailed commands and table mappings are in
 [`docs/EXPERIMENTS.md`](docs/EXPERIMENTS.md). A complete entry-point list is in
 [`docs/SCRIPT_INDEX.md`](docs/SCRIPT_INDEX.md).
 
-## Code Availability During Review
-
-A private author-only repository is not used as the sole reviewer-access route.
-The exact revision snapshot should be supplied through an anonymous read-only
-repository or as a supplementary archive. After acceptance, the reviewed
-snapshot will be made public and archived as a versioned release. See
-[`docs/REVIEW_RELEASE_WORKFLOW.md`](docs/REVIEW_RELEASE_WORKFLOW.md) for the
-submission checklist and response-letter wording.
-
-To build the identity-scrubbed reviewer artifacts:
-
-```bash
-python tools/build_anonymous_snapshot.py --force
-```
-
-Do not upload this author-maintained package root to an anonymous service. Commit
-only the contents of `dist/eda-review-anonymous/` to a dedicated review
-repository, or upload `dist/eda-review-anonymous.zip` as supplementary code.
-
 ## Sampling Fairness
 
 The scripts preserve each method's original hyperparameters while aligning the
@@ -120,7 +103,7 @@ gradients are averaged at each attack iteration. It is not the iteration count.
 OPS uses 25 sampled pairs plus its base gradient, so this aligns sampling
 complexity rather than claiming identical runtime or internal optimization.
 
-## Revision Experiments
+## Extended Evaluations
 
 ```bash
 # Multiple budgets and targeted transfer (fresh full reproduction)
@@ -164,7 +147,7 @@ model routes, missing responses, and aggregation.
 - Use `--reuse_existing` only when saved configuration metadata matches.
 - GPU/CUDA versions and provider-hosted VLM revisions can cause small variation.
 
-Before committing or uploading a reviewer snapshot, run:
+Before running experiments or redistributing the package, run:
 
 ```bash
 python tools/check_release.py

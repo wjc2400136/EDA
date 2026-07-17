@@ -2,7 +2,7 @@
 
 [English](CONTRIBUTING.md) | [简体中文](CONTRIBUTING.zh-CN.md)
 
-仓库公开后，欢迎提交提高可复现性、可移植性、文档质量和错误提示的修改。
+欢迎提交提高可复现性、可移植性、文档质量和错误提示的修改。
 
 提交 issue 时请提供操作系统、Python/PyTorch/CUDA/timm 版本、GPU 型号、完整命令、
 数据 schema 和完整 traceback。禁止上传数据集图像、第三方 checkpoint、API 密钥，
@@ -18,4 +18,3 @@
 
 涉及 API 密钥意外泄露等安全问题时，应私下联系仓库维护者，不要公开发布密钥或
 完整敏感日志。
-

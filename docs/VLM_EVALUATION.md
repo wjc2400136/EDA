@@ -83,7 +83,7 @@ five identical-condition random-seed repetitions. Therefore:
 If a provider rejects an image, retain the rejection record, do not substitute
 another image, and report the model, prompt index, error, and valid sample count.
 
-After all provider runs, create the manuscript-ready summary:
+After all provider runs, create the consolidated summary:
 
 ```bash
 python experiments/vlm/summarize_vlm_results.py \

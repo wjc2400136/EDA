@@ -40,7 +40,7 @@ python experiments/run_modern_robustbench_eval.py \
 ```
 
 首次下载后可去掉 `--allow_download`，以避免运行过程中意外联网或下载了不同版本
-的权重。公开结果时应记录：
+的权重。为保证可复现性，应记录：
 
 - RobustBench 包版本；
 - model name；
@@ -70,8 +70,8 @@ preprocessing
 framework_version
 ```
 
-不要用名称相近但训练协议不同的 checkpoint 替代。大修新增的现代 defense 结果
-应优先使用 `run_modern_robustbench_eval.py`，因为该流程更标准化。
+不要用名称相近但训练协议不同的 checkpoint 替代。现代 defense 评估优先使用
+`run_modern_robustbench_eval.py`，因为该流程更标准化。
 
 ## 4. 缓存与输出不要提交
 
@@ -84,4 +84,3 @@ framework_version
 
 若通过 Zenodo 单独发布可再分发的权重，应提供校验和、许可证和与代码版本对应的
 固定归档链接。
-

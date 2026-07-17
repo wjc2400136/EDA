@@ -3,8 +3,8 @@
 [English](VLM_EVALUATION.md) | [简体中文](VLM_EVALUATION.zh-CN.md)
 
 本实验是基于标签条件的经验性图像识别评估，不是 certified robustness 测试。
-调用商业或托管 VLM 可能产生较高费用。现有结果已经完成时，不需要为了公开代码
-再次调用；公开原始协议、脚本、模型信息和有效样本数即可。
+调用商业或托管 VLM 可能产生较高费用。统计或检查已有结果不需要再次调用服务商；
+协议、脚本、模型信息和有效样本数足以复核聚合过程。
 
 ## 1. 固定 100 图像子集
 
@@ -132,7 +132,7 @@ top-p = 0.9（接口支持时）
 ```
 
 因此这五次结果是**五个 temperature 配置下的评估**，不是“相同 temperature 下
-五个随机种子”的严格重复。论文和回复信应写成：
+五个随机种子”的严格重复。准确的描述为：
 
 ```text
 mean and sample standard deviation across five temperature-varying evaluations
@@ -146,9 +146,8 @@ variation across five evaluation configurations
 
 不应声称该标准差只反映模型采样随机性。
 
-对于不开放采样参数的 Codex/Cursor 隔离任务，应明确 unsupported parameters 使用
-provider defaults。该限制不要求重新付费实验，但必须在正文、补充材料和回复信中
-透明披露。
+对于不开放采样参数的隔离任务，unsupported parameters 使用 provider defaults。
+汇总和解释结果时必须透明披露这一限制。
 
 ## 6. 原始结果文件
 
@@ -166,7 +165,7 @@ outputs/vlm/MODEL_ID/
 ```
 
 每个 JSON 保存：prompt 编号、文件名、方法、trial、model ID、base URL、标签、
-temperature、top-p、完整 prompt 和解析后的响应。公开结果前检查 JSON 中没有
+temperature、top-p、完整 prompt 和解析后的响应。共享或汇总结果前检查 JSON 中没有
 API key、用户主目录或其他个人信息。
 
 ## 7. Provider 拒绝和缺失响应
@@ -206,7 +205,7 @@ python experiments/vlm/summarize_vlm_results.py \
 
 汇总脚本优先读取 strict per-trial JSON，也兼容旧的每方法 aggregate JSON。
 
-## 9. 论文表述边界
+## 9. 结果解释边界
 
 可以支持的结论：
 
@@ -222,4 +221,3 @@ python experiments/vlm/summarize_vlm_results.py \
 - 交互界面和 API 的采样控制完全一致；
 - 缺失响应可以视为攻击成功；
 - 该实验代表 certified 或理论鲁棒性证明。
-

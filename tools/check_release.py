@@ -1,4 +1,4 @@
-"""Dependency-free checks for files intended for the public repository."""
+"""Dependency-free checks for the reproducibility package."""
 
 import re
 import sys
@@ -29,14 +29,14 @@ REQUIRED_FILES = {
     "CONTRIBUTING.md",
     "CONTRIBUTING.zh-CN.md",
     "LICENSE",
+    "QUICKSTART.md",
+    "QUICKSTART.zh-CN.md",
     "README.md",
     "README.zh-CN.md",
     "THIRD_PARTY_NOTICES.md",
     "THIRD_PARTY_NOTICES.zh-CN.md",
     "docs/EXPERIMENTS.md",
     "docs/EXPERIMENTS.zh-CN.md",
-    "docs/REVIEW_RELEASE_WORKFLOW.md",
-    "docs/REVIEW_RELEASE_WORKFLOW.zh-CN.md",
     "environment.yml",
     "requirements.txt",
 }

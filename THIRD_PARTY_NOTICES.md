@@ -12,9 +12,9 @@ The attack framework and portions of the attack implementations are derived
 from the TransferAttack project by Trustworthy-AI-Group. The upstream copyright
 notice and MIT License are retained in this repository.
 
-The EDA implementation, revision experiment runners, reproducibility documents,
-and associated evaluation utilities contain modifications and additions by
-the manuscript authors.
+The EDA implementation, experiment runners, reproducibility documents, and
+associated evaluation utilities contain modifications and additions by
+the project contributors.
 
 ## Runtime Dependencies
 
@@ -35,4 +35,3 @@ The repository includes implementations of published attack methods for
 research comparison. Their papers are cited in the manuscript and source code.
 Users redistributing individual implementations should also inspect the original
 project repositories and licenses associated with those methods.
-

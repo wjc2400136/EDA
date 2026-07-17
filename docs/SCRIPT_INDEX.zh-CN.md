@@ -26,20 +26,18 @@
 
 ## 旧防御脚本
 
-`run_robust_table.py` 保留用于原稿中的旧防御与预处理模型，但依赖若干第三方实现和
-checkpoint。大修新增的现代鲁棒模型实验应优先使用
-`run_modern_robustbench_eval.py`。
+`run_robust_table.py` 用于旧防御与预处理模型，但依赖若干第三方实现和
+checkpoint。现代鲁棒模型评估优先使用 `run_modern_robustbench_eval.py`。
 
 ## 脚本选择建议
 
-- 只复现论文核心结论：主实验 + parts/layout ablation；
-- 回应 Reviewer #2-5：budget/targeted 脚本；
-- 回应 Reviewer #2-6：seed stability 脚本；
-- 回应 Reviewer #2-7：modern RobustBench 脚本；
-- 回应 Reviewer #2-9：perceptual quality 脚本；
-- 回应 larger/distribution shift：ImageNet-V2 或 ImageNet-Val；
-- 回应 VLM 定量协议：VLM 三个脚本共同使用。
+- 核心迁移结果：主实验与 parts/layout ablation；
+- 多预算和目标迁移：budget/targeted 脚本；
+- 随机稳定性：seed stability 脚本；
+- 现代鲁棒模型：modern RobustBench 脚本；
+- 感知质量：perceptual quality 脚本；
+- 大规模或分布偏移：ImageNet-V2 或 ImageNet-Val；
+- VLM 定量评估：联合使用三个 VLM 脚本。
 
 所有脚本均可通过 `python experiments/<script>.py --help` 查看当前参数。运行长任务
 前应把实际命令保存到实验输出目录之外的日志中。
-

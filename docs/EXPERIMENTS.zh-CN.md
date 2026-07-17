@@ -2,7 +2,7 @@
 
 [English](EXPERIMENTS.md) | [简体中文](EXPERIMENTS.zh-CN.md)
 
-本文档给出从环境检查、主实验到大修新增实验的建议执行顺序。所有命令默认在
+本文档给出从环境检查、主实验到扩展评估的建议执行顺序。所有命令默认在
 `EDA_reproducibility_package` 根目录运行，并已执行：
 
 ```bash
@@ -147,12 +147,12 @@ python experiments/run_budget_targeted_eda.py \
   --GPU_ID 0
 ```
 
-公开复现包更推荐全量重跑模式，避免依赖无法追踪的旧目录。
+完整复现推荐使用全量重跑模式，避免依赖无法追踪的旧目录。
 
 ### 一致性核对
 
 在同一数据、种子、超参数和代码版本下，多预算表的 `16/255` untargeted 结果应
-与主实验一致。若 Inc-v4/BSR 或其他条目不一致，依次检查：
+与主实验一致。若任一条目不一致，依次检查：
 
 1. 是否读取了旧对抗样本目录；
 2. BSR 是否使用 `num_scale=25`；
@@ -187,9 +187,8 @@ python experiments/run_appearance_ablation_eda.py --mode both --input_dir ./data
 python experiments/tune_noise_scale_eda.py --mode both --input_dir ./data --output_dir ./outputs/noise_scale --GPU_ID 0
 ```
 
-`edge movement` 是 dual control point layout 内部的设计因素，不应在论文贡献中
-单列为第四项创新。论文主线保持三项组件：dual layout、adaptive canvas
-expansion、appearance augmentation。
+该消融将 `edge movement` 视为 dual control point layout 内部的设计因素，并与
+dual layout、adaptive canvas expansion 和 appearance augmentation 分开评估。
 
 ## 8. 现代鲁棒模型
 
@@ -201,8 +200,8 @@ python experiments/run_modern_robustbench_eval.py \
   --model_dir ./checkpoints/robustbench --allow_download --GPU_ID 0
 ```
 
-后续复现可去掉 `--allow_download`。结果应描述为“against the selected modern
-robust models”，不要宣称突破 certified robustness。
+后续复现可去掉 `--allow_download`。该实验衡量对所选现代鲁棒模型的经验迁移效果，
+不构成对 certified robustness 的理论突破。
 
 ## 9. 感知质量和特征指标
 
@@ -231,8 +230,7 @@ python experiments/run_imagenetv2_generalization_eda.py \
   --output_dir ./outputs/imagenetv2 --GPU_ID 0
 ```
 
-50K 实验耗时较长。若论文最终未填入 IN-Val-50K 结果，应删除空表行，而不是保留
-`--`。ImageNet-V2 10K 已同时提供更大样本和自然分布偏移证据。
+50K 实验耗时较长。ImageNet-V2 10K 可用于同时评估更大样本规模和自然分布偏移。
 
 ## 11. 断点恢复与失败处理
 

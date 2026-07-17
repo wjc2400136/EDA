@@ -1,9 +1,9 @@
-# 匿名审稿人快速入门
+# 快速入门
 
-[English](REVIEWER_QUICKSTART.md) | [简体中文](REVIEWER_QUICKSTART.zh-CN.md)
+[English](QUICKSTART.md) | [简体中文](QUICKSTART.zh-CN.md)
 
-这是与返修稿对应的去身份化 `review-v1` 快照。数据集图像、模型权重、实验输出、
-服务商原始响应和 API 密钥均未包含；其准备方法见
+本代码包包含复现 EDA 实验所需的代码和文档。数据集图像、模型权重、实验输出、
+服务商原始响应和 API 密钥不随包提供；其准备方法见
 [`data/README.zh-CN.md`](data/README.zh-CN.md) 和
 [`checkpoints/README.zh-CN.md`](checkpoints/README.zh-CN.md)。
 
@@ -35,7 +35,7 @@ python experiments/run_multi_source.py \
 论文主设置为 `epsilon=16/255`、`T=10`、`alpha=1.6/255`、`mu=1` 和随机种子
 42。`num_warping=25` 表示每次攻击迭代中参与梯度平均的变换视图数，不是攻击迭代数。
 
-## 4. 复现返修新增实验
+## 4. 运行扩展评估
 
 多预算、目标迁移、五随机种子、RobustBench、感知质量、跨数据集泛化、消融和 VLM
 聚合命令见 [`docs/EXPERIMENTS.zh-CN.md`](docs/EXPERIMENTS.zh-CN.md) 与
@@ -44,5 +44,5 @@ python experiments/run_multi_source.py \
 
 ## 5. 输出与核验
 
-生成结果写入 `outputs/`，且默认不进入版本控制。比较或重新分发快照前运行
+生成结果写入 `outputs/`，且默认不进入版本控制。比较或重新分发代码包前运行
 `python tools/check_release.py`。完整协议见 [`README.zh-CN.md`](README.zh-CN.md)。
