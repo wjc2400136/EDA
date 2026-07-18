@@ -26,8 +26,8 @@ from transferattack.utils import AdvDataset, load_pretrained_model, save_images,
 
 
 GLOBAL_SEED = 42
-DEFAULT_SOURCES = "resnet18,inception_v4,vit_base_patch16_224,levit_256"
-DEFAULT_ATTACKS = "bsr,decowa,ops,sid,eda"
+DEFAULT_SOURCES = "resnet18,inception_v3,inception_v4,inception_resnet_v2"
+DEFAULT_ATTACKS = "l2t,bsr,decowa,ops,sid,eda"
 DEFAULT_SEEDS = "0,1,2,3,4"
 DEFAULT_EPSILON = "16/255"
 DEFAULT_GENERATION_BATCHSIZE = 32
@@ -296,6 +296,67 @@ def metadata_float(metadata: Dict[str, object], key: str, default: float = 0.0) 
         return default
 
 
+def attack_sampling_metadata(args: argparse.Namespace, attack: str) -> Dict[str, object]:
+    """Describe the transformed-sample setting used by each paper attack."""
+    if attack == "bsr":
+        return {"sample_parameter": "num_scale", "num_scale": args.num_warping}
+    if attack == "decowa":
+        return {"sample_parameter": "num_warping", "num_warping": args.num_warping}
+    if attack == "sid":
+        return {"sample_parameter": "num_scale", "num_scale": args.num_warping}
+    if attack == "eda":
+        return {"sample_parameter": "num_warping", "num_warping": args.num_warping}
+    if attack == "ops":
+        return {
+            "sample_parameter": "original_method_setting",
+            "num_sample_operator": 5,
+            "num_sample_neighbor": 5,
+        }
+    if attack == "l2t":
+        return {"sample_parameter": "original_method_setting", "num_scale": 2}
+    return {"sample_parameter": "original_method_setting"}
+
+
+def validate_reuse_metadata(
+    case_dir: Path,
+    args: argparse.Namespace,
+    source: str,
+    eps_label: str,
+    eps_value: float,
+    seed: int,
+    attack: str,
+) -> None:
+    """Reject outputs generated with a different seed or sampling protocol."""
+    metadata = load_case_metadata(case_dir)
+    if not metadata:
+        raise RuntimeError(
+            f"Cannot reuse {case_dir}: case_meta.json is missing. "
+            "Regenerate the case without --reuse_existing."
+        )
+    alpha = args.alpha if args.alpha is not None else eps_value / float(args.epoch)
+    expected = {
+        "source": source,
+        "attack": attack,
+        "epsilon_label": eps_label,
+        "epsilon": eps_value,
+        "alpha": alpha,
+        "epoch": args.epoch,
+        "seed": seed,
+        **attack_sampling_metadata(args, attack),
+    }
+    mismatches = [
+        f"{key}: existing={metadata.get(key)!r}, expected={value!r}"
+        for key, value in expected.items()
+        if metadata.get(key) != value
+    ]
+    if mismatches:
+        raise RuntimeError(
+            f"Cannot reuse incompatible outputs in {case_dir}:\n- "
+            + "\n- ".join(mismatches)
+            + "\nRegenerate the case without --reuse_existing."
+        )
+
+
 def resolve_generation_batchsize(args: argparse.Namespace, source: str, attack: str) -> int:
     if args.batchsize > 0:
         return int(args.batchsize)
@@ -413,6 +474,7 @@ def save_case_metadata(
         "complete": completed_images >= expected_images,
         "resume_runs": resume_runs,
     }
+    metadata.update(attack_sampling_metadata(args, attack))
     if attack == "eda":
         metadata.update(
             mesh_width=args.mesh_width,
@@ -454,6 +516,16 @@ def generate_cases(
                 case_dir = case_output_dir(args, source, eps_label, seed, attack)
                 existing = existing_expected_images(case_dir, expected)
                 missing = missing_expected_images(case_dir, expected)
+                if args.reuse_existing and existing:
+                    validate_reuse_metadata(
+                        case_dir=case_dir,
+                        args=args,
+                        source=source,
+                        eps_label=eps_label,
+                        eps_value=eps_value,
+                        seed=seed,
+                        attack=attack,
+                    )
                 if args.reuse_existing and not missing:
                     print(f"Skipping existing case: source={source}, seed={seed}, attack={attack}")
                     continue
@@ -902,7 +974,16 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("--mesh_width", default=3, type=int)
     parser.add_argument("--mesh_height", default=3, type=int)
     parser.add_argument("--noise_scale", default=0.45, type=float)
-    parser.add_argument("--num_warping", default=25, type=int)
+    parser.add_argument(
+        "--num_warping",
+        default=25,
+        type=int,
+        help=(
+            "Matched transformed-sample count N: mapped to num_scale for "
+            "BSR/SID and num_warping for DeCoWA/EDA. OPS and L2T retain "
+            "their original method-specific settings."
+        ),
+    )
 
     parser.add_argument("--per_seed_csv", default="")
     parser.add_argument("--aggregate_csv", default="")

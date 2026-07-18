@@ -17,11 +17,13 @@ from tqdm import tqdm
 
 
 GLOBAL_SEED = 42
-# DEFAULT_SOURCES = "resnet18"
-# DEFAULT_ATTACKS = "eda"
 DEFAULT_SOURCES = "resnet18,inception_v3,inception_v4,inception_resnet_v2"
-DEFAULT_ATTACKS = "bsr,decowa,ops,sid,eda"
+DEFAULT_ATTACKS = "l2t,bsr,decowa,ops,sid,eda"
 DEFAULT_EPSILON = "16/255"
+GENERATION_PROTOCOL_VERSION = 2
+DECOWA_ORIGINAL_MESH_WIDTH = 3
+DECOWA_ORIGINAL_MESH_HEIGHT = 3
+DECOWA_ORIGINAL_NOISE_SCALE = 2.0
 DEFAULT_ROBUST_MODELS = (
     "Singh2023Revisiting_ConvNeXt-T-ConvStem,"
     "Singh2023Revisiting_ViT-B-ConvStem,"
@@ -389,7 +391,12 @@ def build_attacker(args: argparse.Namespace, source: str, attack: str, eps_value
     if attack == "bsr":
         common_kwargs.update(num_scale=args.num_warping)
     elif attack == "decowa":
-        common_kwargs.update(num_warping=args.num_warping)
+        common_kwargs.update(
+            num_warping=args.num_warping,
+            mesh_width=DECOWA_ORIGINAL_MESH_WIDTH,
+            mesh_height=DECOWA_ORIGINAL_MESH_HEIGHT,
+            noise_scale=DECOWA_ORIGINAL_NOISE_SCALE,
+        )
     elif attack == "sid":
         common_kwargs.update(num_scale=args.num_warping)
     elif attack == "eda":
@@ -400,6 +407,106 @@ def build_attacker(args: argparse.Namespace, source: str, attack: str, eps_value
             num_warping=args.num_warping,
         )
     return attack_class(**common_kwargs)
+
+
+def attack_protocol_metadata(args: argparse.Namespace, attack: str) -> Dict[str, object]:
+    if attack == "l2t":
+        return {"sample_parameter": "original_method_setting", "num_scale": 2}
+    if attack == "bsr":
+        return {"sample_parameter": "num_scale", "num_scale": args.num_warping}
+    if attack == "decowa":
+        return {
+            "sample_parameter": "num_warping",
+            "num_warping": args.num_warping,
+            "mesh_width": DECOWA_ORIGINAL_MESH_WIDTH,
+            "mesh_height": DECOWA_ORIGINAL_MESH_HEIGHT,
+            "noise_scale": DECOWA_ORIGINAL_NOISE_SCALE,
+        }
+    if attack == "ops":
+        return {
+            "sample_parameter": "original_method_setting",
+            "num_sample_operator": 5,
+            "num_sample_neighbor": 5,
+        }
+    if attack == "sid":
+        return {"sample_parameter": "num_scale", "num_scale": args.num_warping}
+    if attack == "eda":
+        return {
+            "sample_parameter": "num_warping",
+            "num_warping": args.num_warping,
+            "mesh_width": args.mesh_width,
+            "mesh_height": args.mesh_height,
+            "noise_scale": args.noise_scale,
+        }
+    return {"sample_parameter": "original_method_setting"}
+
+
+def load_case_metadata(case_dir: Path) -> Dict[str, object]:
+    meta_path = case_meta_path(case_dir)
+    if not meta_path.is_file():
+        return {}
+    with meta_path.open("r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def metadata_values_match(existing: object, expected: object) -> bool:
+    if isinstance(expected, float):
+        try:
+            return abs(float(existing) - expected) <= 1e-12
+        except (TypeError, ValueError):
+            return False
+    return existing == expected
+
+
+def validate_reuse_metadata(
+    case_dir: Path,
+    args: argparse.Namespace,
+    source: str,
+    attack: str,
+    eps_label: str,
+    eps_value: float,
+) -> None:
+    metadata = load_case_metadata(case_dir)
+    if not metadata:
+        raise RuntimeError(
+            f"Cannot reuse {case_dir}: case_meta.json is missing. "
+            "Regenerate this case without --reuse_existing."
+        )
+    alpha = args.alpha if args.alpha is not None else eps_value / float(args.epoch)
+    expected = {
+        "source": source,
+        "attack": attack,
+        "epsilon_label": eps_label,
+        "epsilon": eps_value,
+        "alpha": alpha,
+        "epoch": args.epoch,
+        "seed": args.seed,
+        "targeted": args.targeted,
+    }
+    protocol_version = int(metadata.get("protocol_version", 0) or 0)
+    if protocol_version >= GENERATION_PROTOCOL_VERSION:
+        expected.update(attack_protocol_metadata(args, attack))
+    elif attack in {"bsr", "decowa", "sid"}:
+        raise RuntimeError(
+            f"Cannot reuse legacy {display_attack(attack)} outputs in {case_dir}: "
+            "their transformed-sample count is not verified. Regenerate this "
+            "case without --reuse_existing."
+        )
+    elif attack == "eda":
+        legacy_eda = attack_protocol_metadata(args, attack)
+        legacy_eda.pop("sample_parameter", None)
+        expected.update(legacy_eda)
+    mismatches = [
+        f"{key}: existing={metadata.get(key)!r}, expected={value!r}"
+        for key, value in expected.items()
+        if not metadata_values_match(metadata.get(key), value)
+    ]
+    if mismatches:
+        raise RuntimeError(
+            f"Cannot reuse incompatible outputs in {case_dir}:\n- "
+            + "\n- ".join(mismatches)
+            + "\nRegenerate this case without --reuse_existing."
+        )
 
 
 def save_case_metadata(
@@ -414,6 +521,7 @@ def save_case_metadata(
 ) -> None:
     alpha = args.alpha if args.alpha is not None else eps_value / float(args.epoch)
     metadata = {
+        "protocol_version": GENERATION_PROTOCOL_VERSION,
         "source": source,
         "source_label": display_source(source),
         "attack": attack,
@@ -428,13 +536,7 @@ def save_case_metadata(
         "batch_size": batch_size,
         "elapsed_seconds": elapsed_seconds,
     }
-    if attack == "eda":
-        metadata.update(
-            mesh_width=args.mesh_width,
-            mesh_height=args.mesh_height,
-            noise_scale=args.noise_scale,
-            num_warping=args.num_warping,
-        )
+    metadata.update(attack_protocol_metadata(args, attack))
     with open(case_meta_path(case_dir), "w", encoding="utf-8") as f:
         json.dump(metadata, f, indent=2)
 
@@ -449,6 +551,9 @@ def generate_cases(args: argparse.Namespace, sources: List[str], attacks: List[s
             set_seed(args.seed)
             case_dir = case_output_dir(args, source, attack)
             if args.reuse_existing and has_expected_images(case_dir, expected):
+                validate_reuse_metadata(
+                    case_dir, args, source, attack, eps_label, eps_value
+                )
                 print(f"Skipping existing adversarial examples: source={source}, attack={attack}")
                 continue
             if case_dir.exists() and not args.reuse_existing:
@@ -847,7 +952,15 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("--mesh_width", default=3, type=int)
     parser.add_argument("--mesh_height", default=3, type=int)
     parser.add_argument("--noise_scale", default=0.45, type=float)
-    parser.add_argument("--num_warping", default=25, type=int)
+    parser.add_argument(
+        "--num_warping",
+        default=25,
+        type=int,
+        help=(
+            "Matched transformed-sample count N: num_scale for BSR/SID and "
+            "num_warping for DeCoWA/EDA. L2T and OPS keep their original settings."
+        ),
+    )
 
     parser.add_argument("--result_csv", default="")
     parser.add_argument("--tex_rows", default="")

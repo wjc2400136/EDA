@@ -186,7 +186,9 @@ def save_generation_meta(
         ),
         "resume_runs": resume_runs,
     }
-    if args.attack.lower() == "eda":
+    attack = args.attack.lower()
+    metadata.update(attack_sampling_metadata(args, attack))
+    if attack == "eda":
         metadata.update(
             {
                 "mesh_width": args.mesh_width,
@@ -269,7 +271,16 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("--mesh_width", default=3, type=int)
     parser.add_argument("--mesh_height", default=3, type=int)
     parser.add_argument("--noise_scale", default=0.45, type=float)
-    parser.add_argument("--num_warping", default=25, type=int)
+    parser.add_argument(
+        "--num_warping",
+        default=25,
+        type=int,
+        help=(
+            "Matched transformed-sample count N: mapped to num_scale for "
+            "BSR/SID and num_warping for DeCoWA/EDA. OPS and L2T retain "
+            "their original method-specific settings."
+        ),
+    )
 
     parser.add_argument(
         "--result_file",
@@ -355,6 +366,59 @@ def metadata_float(metadata: Dict[str, object], key: str, default: float = 0.0) 
         return default
 
 
+def attack_sampling_metadata(args: argparse.Namespace, attack: str) -> Dict[str, object]:
+    """Describe the transformed-sample setting used by each paper attack."""
+    if attack == "bsr":
+        return {"sample_parameter": "num_scale", "num_scale": args.num_warping}
+    if attack == "decowa":
+        return {"sample_parameter": "num_warping", "num_warping": args.num_warping}
+    if attack == "sid":
+        return {"sample_parameter": "num_scale", "num_scale": args.num_warping}
+    if attack == "eda":
+        return {"sample_parameter": "num_warping", "num_warping": args.num_warping}
+    if attack == "ops":
+        return {
+            "sample_parameter": "original_method_setting",
+            "num_sample_operator": 5,
+            "num_sample_neighbor": 5,
+        }
+    if attack == "l2t":
+        return {"sample_parameter": "original_method_setting", "num_scale": 2}
+    return {"sample_parameter": "original_method_setting"}
+
+
+def validate_reuse_metadata(
+    args: argparse.Namespace, source: str, output_dir: str
+) -> None:
+    """Reject complete-looking outputs generated under a different protocol."""
+    metadata = load_generation_metadata(output_dir)
+    if not metadata:
+        raise RuntimeError(
+            f"Cannot reuse {output_dir}: generation_meta.json is missing. "
+            "Regenerate the case without --reuse_existing."
+        )
+    expected = {
+        "source": source,
+        "attack": args.attack,
+        "seed": args.seed,
+        "epsilon": args.eps,
+        "alpha": args.alpha,
+        "epoch": args.epoch,
+        **attack_sampling_metadata(args, args.attack.lower()),
+    }
+    mismatches = [
+        f"{key}: existing={metadata.get(key)!r}, expected={value!r}"
+        for key, value in expected.items()
+        if metadata.get(key) != value
+    ]
+    if mismatches:
+        raise RuntimeError(
+            f"Cannot reuse incompatible outputs in {output_dir}:\n- "
+            + "\n- ".join(mismatches)
+            + "\nRegenerate the case without --reuse_existing."
+        )
+
+
 def build_attacker(args: argparse.Namespace, source: str):
     attack_class = transferattack.load_attack_class(args.attack)
     kwargs = dict(
@@ -428,6 +492,8 @@ def generate_for_source(args: argparse.Namespace, source: str) -> Tuple[str, flo
     expected = expected_filenames(args.input_dir)
     existing = existing_expected_images(output_dir, expected)
     missing = missing_expected_images(output_dir, expected)
+    if args.reuse_existing and existing:
+        validate_reuse_metadata(args, source, output_dir)
     if args.reuse_existing and args.attack in ["ttp", "m3d"]:
         raise ValueError("--reuse_existing is not supported for ttp/m3d multi-target directory outputs.")
     if args.reuse_existing and not missing:
