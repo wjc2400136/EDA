@@ -30,7 +30,6 @@ GLOBAL_SEED = 42
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SOURCES = "resnet18,inception_v3,inception_v4,inception_resnet_v2"
 DEFAULT_ATTACKS = "l2t,bsr,decowa,ops,sid,eda"
-DEFAULT_CORRECTED_ATTACKS = "bsr,decowa,sid"
 DEFAULT_EPSILONS = "4/255,8/255,12/255,16/255"
 DEFAULT_GENERATION_BATCHSIZE = 32
 SAMPLING_POLICY = "matched_transform_samples_v1"
@@ -249,10 +248,6 @@ def validate_targeted_labels(input_dir: str) -> None:
             "targeted_label must differ from label for targeted evaluation. "
             f"Examples with identical labels: {examples}"
         )
-
-
-def has_expected_images(directory: Path, filenames: Iterable[str]) -> bool:
-    return all((directory / filename).is_file() for filename in filenames)
 
 
 def existing_expected_images(directory: Path, filenames: Iterable[str]) -> List[str]:
@@ -651,7 +646,7 @@ def audit_generation_inventory(
                             f"missing {len(missing)} image(s)"
                             + (f": {sample}" if sample else "")
                         )
-                    if case_dir.is_dir():
+                    if case_dir.is_dir() and not missing:
                         issues.extend(
                             generation_metadata_mismatches(
                                 case_dir=case_dir,
@@ -665,7 +660,7 @@ def audit_generation_inventory(
                             )
                         )
 
-                    status = "ok" if not issues else "failed"
+                    status = "failed" if issues else "ok"
                     detail = "; ".join(issues)
                     rows.append(
                         {
@@ -703,9 +698,8 @@ def audit_generation_inventory(
         writer.writeheader()
         writer.writerows(rows)
 
-    print(
-        f"Generation audit: {len(rows) - len(failures)}/{len(rows)} cases passed."
-    )
+    evaluable_count = len(rows) - len(failures)
+    print(f"Generation audit: {evaluable_count}/{len(rows)} cases passed.")
     print(f"Audit CSV: {audit_path}")
     if failures:
         preview = "\n".join(f"- {item}" for item in failures[:20])
@@ -1344,7 +1338,7 @@ def evaluate_full_table(
     threats = ["untargeted", "targeted"]
     audit_generation_inventory(args, threats, sources, attacks, epsilons)
     result_csv, summary_tex, full_table_tex, analysis_file = output_paths(args)
-    existing = load_existing_rows(result_csv) if args.reuse_existing else {}
+    existing = load_existing_rows(result_csv) if args.resume_full_eval else {}
 
     cases = [
         (threat, source, eps_label, eps_value, attack)
@@ -1362,6 +1356,14 @@ def evaluate_full_table(
                 if has_numeric_result(existing[key], model_name):
                     row[model_name] = float(existing[key][model_name])
         rows[key] = row
+
+    if not args.resume_full_eval:
+        # Clear potentially stale evaluations before the first checkpoint. The
+        # adversarial images are always reused; only cached ASR values are reset.
+        write_result_csv(
+            result_csv, sort_rows(list(rows.values()), sources, attacks, epsilons)
+        )
+        print("Starting a fresh full evaluation from the existing images.")
 
     device = torch.device(
         f"cuda:{args.GPU_ID}" if torch.cuda.is_available() else "cpu"
@@ -1447,7 +1449,7 @@ def evaluate_full_table(
     if incomplete:
         raise RuntimeError(
             f"Evaluation stopped with {len(incomplete)} incomplete cases. "
-            "Rerun full_eval with --reuse_existing to resume."
+            "Rerun full_eval with --resume_full_eval to resume."
         )
 
     finalized_rows = [finalize_result_row(row) for row in rows.values()]
@@ -1541,17 +1543,17 @@ def get_parser() -> argparse.ArgumentParser:
             "targeted_generate",
             "targeted_eval",
             "targeted_both",
-            "corrected_both",
         ],
-        default="corrected_both",
+        default="full_eval",
         help=(
             "Use full_eval to evaluate all existing untargeted and targeted "
-            "samples for the six paper attacks without regenerating images. "
+            "samples for the six paper attacks without regenerating images; "
+            "it starts a fresh ASR evaluation unless --resume_full_eval is set. "
             "Use audit to validate the complete generation inventory only."
         ),
     )
     parser.add_argument("--sources", default=DEFAULT_SOURCES)
-    parser.add_argument("--attacks", default=DEFAULT_CORRECTED_ATTACKS)
+    parser.add_argument("--attacks", default=DEFAULT_ATTACKS)
     parser.add_argument("--epsilons", default=DEFAULT_EPSILONS)
     parser.add_argument("--input_dir", default=str(PROJECT_ROOT / "data"))
     parser.add_argument(
@@ -1568,8 +1570,16 @@ def get_parser() -> argparse.ArgumentParser:
     parser.add_argument("--num_workers", default=4, type=int)
     parser.add_argument("--GPU_ID", default="0")
     parser.add_argument("--seed", default=GLOBAL_SEED, type=int)
-    parser.add_argument("--reuse_existing", action="store_true")
-
+    parser.add_argument(
+        "--reuse_existing",
+        action="store_true",
+        help="Generation modes only: reuse compatible images and generate missing ones.",
+    )
+    parser.add_argument(
+        "--resume_full_eval",
+        action="store_true",
+        help="Resume full_eval from model-level ASR values in the existing result CSV.",
+    )
     parser.add_argument("--epoch", default=10, type=int)
     parser.add_argument("--decay", default=1.0, type=float)
     parser.add_argument("--norm", default="linfty")
@@ -1631,21 +1641,6 @@ def main() -> None:
             )
         else:
             evaluate_full_table(args, sources, paper_attacks, epsilons)
-        return
-
-    if args.mode == "corrected_both":
-        args.reuse_existing = True
-        report_attacks = parse_attacks(DEFAULT_ATTACKS)
-        for threat in ("untargeted", "targeted"):
-            generate_cases(args, threat, sources, attacks, epsilons)
-            evaluate_cases(
-                args,
-                threat,
-                sources,
-                attacks,
-                epsilons,
-                report_attacks=report_attacks,
-            )
         return
 
     threat = threat_from_mode(args.mode)

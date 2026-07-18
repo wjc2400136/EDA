@@ -76,11 +76,9 @@ python experiments/run_budget_targeted_eda.py \
 `full_eval` requires all six attacks and all 192 generation cases. It does not
 generate images. It writes `budget_targeted_results.csv`, the table-body rows,
 the complete LaTeX table, an analysis file, and a generation-audit CSV. Use
-`--reuse_existing` only to resume an interrupted full evaluation.
-
-`corrected_both` is a recovery mode that regenerates BSR, DeCoWA, and SID under
-the matched protocol. Retain L2T, OPS, or EDA output only if its saved metadata
-matches the dataset, seed, iterations, budget, objective, and sampling settings.
+`--resume_full_eval` only to resume an interrupted full evaluation. Without
+this option, existing adversarial images are reused but cached ASR values are
+discarded so that all six attacks are evaluated under one consistent protocol.
 
 At `16/255`, untargeted values must match the main experiment when every
 generation setting is identical. A mismatch indicates mixed provenance or a
@@ -112,16 +110,29 @@ python experiments/tune_noise_scale_eda.py --mode both --input_dir ./data --outp
 
 Use `python SCRIPT --help` for script-specific plot and output options.
 
-## Robustness, Perceptual Quality, and Features
+## Robustness and Perceptual Quality
 
 ```bash
 python experiments/run_modern_robustbench_eval.py --mode both --input_dir ./data --output_dir ./outputs/robustbench --model_dir ./checkpoints/robustbench --allow_download --GPU_ID 0
 python experiments/run_perceptual_quality_eda.py --mode both --input_dir ./data --output_dir ./outputs/perceptual --GPU_ID 0 --allow_missing_optional_metrics
-python experiments/run_feature_cam_metrics_eda.py --mode both --input_dir ./data --output_dir ./outputs/features --GPU_ID 0
 ```
 
 Perceptual metrics compare clean images with final adversarial images, not with
 intermediate TPS-warped views.
+
+## Combination with Gradient-Based Attacks
+
+```bash
+python experiments/run_gradient_eda_combination.py \
+  --mode both --sources resnet18 \
+  --methods vmifgsm,emifgsm,pgn,mef,gaa \
+  --variants base,eda --input_dir ./data \
+  --output_dir ./outputs/gradient_combination --GPU_ID 0
+```
+
+The runner compares each gradient-based attack with and without the EDA input
+transformation under the same source model, dataset, perturbation budget, and
+evaluation targets.
 
 ## Larger and Shifted Datasets
 

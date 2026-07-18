@@ -9,7 +9,7 @@
 | `run_seed_stability_eda.py` | Five-seed mean and sample standard deviation |
 | `run_modern_robustbench_eval.py` | Current adversarially trained RobustBench models |
 | `run_perceptual_quality_eda.py` | SSIM, PSNR, LPIPS, TV, NMSE, NLPD, and GMSD |
-| `run_feature_cam_metrics_eda.py` | Feature-space and Grad-CAM metrics |
+| `run_gradient_eda_combination.py` | EDA combined with VMI-FGSM, EMI-FGSM, PGN, MEF, and GAA |
 | `run_parts_ablation_eda.py` | Component ablation |
 | `run_layout_ablation_eda.py` | Control-point layout and edge-movement ablation |
 | `run_expansion_ablation_eda.py` | Canvas expansion modes and visualizations |

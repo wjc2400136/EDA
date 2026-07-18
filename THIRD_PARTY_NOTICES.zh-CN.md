@@ -14,7 +14,7 @@ EDA 实现、实验 runner、复现文档及相关评估工具包含 本项目�
 
 ## 运行依赖
 
-PyTorch、torchvision、timm、RobustBench、LPIPS、pytorch-grad-cam、OpenAI
+PyTorch、torchvision、timm、RobustBench、LPIPS、OpenAI
 客户端及 requirements 中列出的其他包均适用各自许可证。安装本项目不会改变这些
 第三方许可条件。
 

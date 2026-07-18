@@ -4,7 +4,8 @@
 
 本目录是论文 **Boosting Cross-Model Adversarial Transferability by Enhanced
 Deformation Attack** 的独立复现代码包，包含 EDA、五种对比攻击，以及主实验、
-消融实验、现代鲁棒模型、跨数据集泛化、感知质量和 VLM 定量评估所需脚本。
+消融实验、现代鲁棒模型、跨数据集泛化、感知质量、梯度攻击组合和 VLM 定量评估
+所需脚本。
 
 该目录为独立复现代码包，运行或修改其中的文件不会影响包外的工程目录。
 
@@ -64,7 +65,6 @@ pip install -r requirements-evaluation.txt
 
 - `robustbench` 用于现代鲁棒模型；
 - `lpips`、`scikit-image` 用于感知质量；
-- `grad-cam` 用于特征和注意力指标；
 - `openai` 用于兼容 OpenAI Chat Completions 格式的 VLM 接口；
 - `pyiqa` 是可选项，可能升级或替换固定的 PyTorch，建议单独建环境安装。
 
@@ -182,7 +182,7 @@ python experiments/run_budget_targeted_eda.py \
 `untargeted_both` 和 `targeted_both` 模式。
 `full_eval` 不会重新生成对抗样本；它会先核验 192 个生成案例，再用 20 个目标
 模型评估六种方法，并输出完整 CSV 和 LaTeX 总表。只有从中断的评估 CSV 续跑时
-才添加 `--reuse_existing`。
+才添加 `--resume_full_eval`。
 
 ### 五个随机种子
 
@@ -204,6 +204,10 @@ python experiments/run_modern_robustbench_eval.py \
 python experiments/run_perceptual_quality_eda.py \
   --mode both --input_dir ./data --output_dir ./outputs/perceptual_quality \
   --GPU_ID 0 --allow_missing_optional_metrics
+
+python experiments/run_gradient_eda_combination.py \
+  --mode both --input_dir ./data --output_dir ./outputs/gradient_combination \
+  --GPU_ID 0
 ```
 
 感知质量指标比较 clean image 与**最终对抗样本**，不比较 TPS 中间变换图像。

@@ -37,7 +37,7 @@ CNN 分组平均值排除与源模型完全相同的 checkpoint；相同模型�
 4. 完成多预算和 targeted attack。
 5. 完成五随机种子实验。
 6. 运行消融和参数敏感性。
-7. 运行现代鲁棒模型、感知质量和 feature/Grad-CAM 指标。
+7. 运行现代鲁棒模型、感知质量和梯度攻击组合实验。
 8. 最后运行 ImageNet-V2 或 ImageNet-Val 大规模泛化。
 9. VLM 实验独立执行，不与 GPU 攻击实验共用输出目录。
 
@@ -52,8 +52,7 @@ CNN 分组平均值排除与源模型完全相同的 checkpoint；相同模型�
 多预算脚本使用更明确的模式名：
 
 - `untargeted_generate`、`untargeted_eval`、`untargeted_both`；
-- `targeted_generate`、`targeted_eval`、`targeted_both`；
-- `corrected_both`：只为修复旧实验而重跑指定方法，不是全量模式。
+- `targeted_generate`、`targeted_eval`、`targeted_both`。
 
 ## 4. 主实验：CNN 源模型
 
@@ -128,26 +127,11 @@ python experiments/run_budget_targeted_eda.py \
 
 `full_eval` 强制使用论文中的六种方法并检查全部 192 个生成案例，不会重新生成
 图像。它输出完整 CSV、TeX 表格行、完整 LaTeX 总表、分析文本和生成审计 CSV。
-只有从中断的完整评估续跑时才添加 `--reuse_existing`。
+只有从中断的完整评估续跑时才添加 `--resume_full_eval`。默认情况下，脚本复用
+已有对抗图像，但丢弃缓存的 ASR，从而按照同一协议重新评估全部六种方法。
 
 脚本按 `alpha=epsilon/epoch` 自动缩放步长。targeted attack 使用
 `data/labels.csv` 中的数据集原始 `targeted_label`。
-
-### 恢复旧实验
-
-`corrected_both` 默认只处理 BSR、DeCoWA 和 SID，用于修复此前采样数量不一致的
-旧输出。它会尝试保留 L2T、OPS 和 EDA 的已有结果，因此只有在这些已有结果的
-metadata 与当前设置完全相同时才可使用：
-
-```bash
-python experiments/run_budget_targeted_eda.py \
-  --mode corrected_both \
-  --input_dir ./data \
-  --output_dir ./outputs/budget_targeted_existing \
-  --GPU_ID 0
-```
-
-完整复现推荐使用全量重跑模式，避免依赖无法追踪的旧目录。
 
 ### 一致性核对
 
@@ -203,22 +187,31 @@ python experiments/run_modern_robustbench_eval.py \
 后续复现可去掉 `--allow_download`。该实验衡量对所选现代鲁棒模型的经验迁移效果，
 不构成对 certified robustness 的理论突破。
 
-## 9. 感知质量和特征指标
+## 9. 感知质量
 
 ```bash
 python experiments/run_perceptual_quality_eda.py \
   --mode both --input_dir ./data --output_dir ./outputs/perceptual \
   --GPU_ID 0 --allow_missing_optional_metrics
-
-python experiments/run_feature_cam_metrics_eda.py \
-  --mode both --input_dir ./data --output_dir ./outputs/features --GPU_ID 0
 ```
 
 SSIM、PSNR、LPIPS 等比较 clean 和最终 adversarial image。TV 应在扰动
-`delta=x_adv-x` 上计算。feature/Grad-CAM 指标用于说明内部表示变化，不等同于
-分类层机制的因果证明。
+`delta=x_adv-x` 上计算。
 
-## 10. 大规模与分布偏移数据
+## 10. 与梯度攻击组合
+
+```bash
+python experiments/run_gradient_eda_combination.py \
+  --mode both --sources resnet18 \
+  --methods vmifgsm,emifgsm,pgn,mef,gaa \
+  --variants base,eda --input_dir ./data \
+  --output_dir ./outputs/gradient_combination --GPU_ID 0
+```
+
+该脚本在相同源模型、数据集、扰动预算和目标模型下，比较五种梯度攻击单独使用与
+结合 EDA 输入变换后的迁移结果。
+
+## 11. 大规模与分布偏移数据
 
 ```bash
 python experiments/run_imagenet_val_generalization_eda.py \
@@ -232,7 +225,7 @@ python experiments/run_imagenetv2_generalization_eda.py \
 
 50K 实验耗时较长。ImageNet-V2 10K 可用于同时评估更大样本规模和自然分布偏移。
 
-## 11. 断点恢复与失败处理
+## 12. 断点恢复与失败处理
 
 - `--reuse_existing` 只补齐缺失图片，不能自动保证已有图片配置正确；
 - 每次长任务应保存命令、日志和代码版本；
@@ -242,7 +235,7 @@ python experiments/run_imagenetv2_generalization_eda.py \
 - 不同 source、attack、seed、epsilon 和 threat 使用独立子目录；
 - 生成完成后再汇总 CSV，不从半完成目录计算最终表格。
 
-## 12. 推荐保存的运行记录
+## 13. 推荐保存的运行记录
 
 每组实验至少保存以下信息：
 

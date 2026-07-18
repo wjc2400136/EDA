@@ -5,8 +5,8 @@
 This standalone package accompanies **Boosting Cross-Model Adversarial
 Transferability by Enhanced Deformation Attack**. It contains EDA, the five
 compared transfer attacks, and scripts for the main, ablation, robustness,
-generalization, perceptual-quality, and VLM experiments. It is an isolated copy;
-using it does not modify files outside this directory.
+generalization, perceptual-quality, gradient-combination, and VLM experiments.
+It is an isolated copy; using it does not modify files outside this directory.
 
 For a minimal end-to-end workflow, start with [`QUICKSTART.md`](QUICKSTART.md).
 
@@ -122,13 +122,16 @@ python experiments/run_perceptual_quality_eda.py --mode both --input_dir ./data 
 
 # Modern RobustBench targets
 python experiments/run_modern_robustbench_eval.py --mode both --input_dir ./data --output_dir ./outputs/robustbench --model_dir ./checkpoints/robustbench --allow_download --GPU_ID 0
+
+# Combination with gradient-based attacks (RN-18 source by default)
+python experiments/run_gradient_eda_combination.py --mode both --input_dir ./data --output_dir ./outputs/gradient_combination --GPU_ID 0
 ```
 
 The targeted experiment uses the `targeted_label` supplied for each image by
 the ImageNet-Compatible Dataset; it does not sample new target labels.
 `full_eval` never regenerates adversarial images. It first validates all 192
 generation cases, evaluates the six attacks on all 20 target models, and writes
-the complete CSV and LaTeX table. Add `--reuse_existing` only when resuming an
+the complete CSV and LaTeX table. Add `--resume_full_eval` only when resuming an
 interrupted evaluation from its checkpoint CSV.
 
 ## VLM Evaluation

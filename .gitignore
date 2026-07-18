@@ -56,7 +56,7 @@ seed_stability/
 budget_targeted_sensitivity/
 modern_robustbench_eval/
 perceptual_quality/
-feature_cam_metrics/
+gradient_eda_combination/
 parts_ablation/
 layout_ablation/
 expansion_ablation/

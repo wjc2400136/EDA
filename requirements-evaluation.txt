@@ -1,7 +1,6 @@
 # Install after requirements.txt when the corresponding evaluations are needed.
 robustbench
 lpips
-grad-cam
 scikit-image
 openai
 

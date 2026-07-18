@@ -9,7 +9,7 @@
 | `run_seed_stability_eda.py` | 种子 0--4 的稳定性 | 每种子结果、mean ± sample std |
 | `run_modern_robustbench_eval.py` | 现代对抗训练模型 | 各鲁棒模型 ASR 和汇总表 |
 | `run_perceptual_quality_eda.py` | 最终对抗样本感知质量 | SSIM、PSNR、LPIPS、TV、NMSE、NLPD、GMSD |
-| `run_feature_cam_metrics_eda.py` | feature 和 Grad-CAM 变化 | L2、KL、cosine、JS、correlation 等 |
+| `run_gradient_eda_combination.py` | EDA 与五种梯度攻击组合 | 单独攻击与组合 EDA 的 CNN/ViT ASR |
 | `run_parts_ablation_eda.py` | 三个主要组件消融 | 组件组合 ASR |
 | `run_layout_ablation_eda.py` | single/dual 与 edge movement | CNN/ViT ASR |
 | `run_expansion_ablation_eda.py` | canvas expansion 模式 | ASR、边界可视化和图表 |
@@ -36,6 +36,7 @@ checkpoint。现代鲁棒模型评估优先使用 `run_modern_robustbench_eval.p
 - 随机稳定性：seed stability 脚本；
 - 现代鲁棒模型：modern RobustBench 脚本；
 - 感知质量：perceptual quality 脚本；
+- 梯度攻击组合：gradient combination 脚本；
 - 大规模或分布偏移：ImageNet-V2 或 ImageNet-Val；
 - VLM 定量评估：联合使用三个 VLM 脚本。
 

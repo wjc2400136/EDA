@@ -18,7 +18,7 @@ the project contributors.
 
 ## Runtime Dependencies
 
-PyTorch, torchvision, timm, RobustBench, LPIPS, pytorch-grad-cam, OpenAI client
+PyTorch, torchvision, timm, RobustBench, LPIPS, OpenAI client
 libraries, and other packages listed in the requirements files remain subject
 to their own licenses. Installing this project does not change those terms.
 
