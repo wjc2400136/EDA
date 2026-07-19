@@ -1,6 +1,10 @@
 {
   "package_version": "1.0.0",
-  "generated_at_utc": "2026-07-18T03:17:39+00:00",
+  "generated_at_utc": "2026-07-19T02:08:21+00:00",
+  "scope": "principal_transfer_experiments",
+  "experiment_entry_points": [
+    "experiments/run_multi_source.py"
+  ],
   "identity_metadata_included": false,
   "dataset_images_included": false,
   "model_weights_included": false,

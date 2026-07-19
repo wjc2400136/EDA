@@ -42,13 +42,13 @@ def load_pretrained_model(cnn_model=[], vit_model=[], tf_robust_model=[]):
     for model_name in cnn_model:
         if model_name == "resnet50_l2_eps1":
             raise RuntimeError(
-                "The legacy MadryLab loader is not bundled. Use "
-                "experiments/run_modern_robustbench_eval.py for robust models."
+                "The legacy MadryLab robust-model loader is not included in this "
+                "principal-experiment package."
             )
         elif model_name == "resnet50_linf_eps4":
             raise RuntimeError(
-                "The legacy MadryLab loader is not bundled. Use "
-                "experiments/run_modern_robustbench_eval.py for robust models."
+                "The legacy MadryLab robust-model loader is not included in this "
+                "principal-experiment package."
             )
         else:
             yield model_name, models.__dict__[model_name](weights="DEFAULT")

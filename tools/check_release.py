@@ -22,7 +22,6 @@ TEXT_SUFFIXES = {
 FORBIDDEN_SUFFIXES = {".ckpt", ".h5", ".onnx", ".pb", ".pt", ".pth", ".safetensors"}
 MAX_FILE_BYTES = 50 * 1024 * 1024
 REQUIRED_FILES = {
-    ".env.example",
     ".gitattributes",
     ".gitignore",
     "CITATION.cff",
@@ -38,6 +37,7 @@ REQUIRED_FILES = {
     "docs/EXPERIMENTS.md",
     "docs/EXPERIMENTS.zh-CN.md",
     "environment.yml",
+    "experiments/run_multi_source.py",
     "requirements.txt",
 }
 SENSITIVE_PATTERNS = {

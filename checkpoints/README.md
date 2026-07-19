@@ -1,22 +1,16 @@
 # Model Weights
 
-[English](README.md) | [简体中文](README.zh-CN.md)
+[English](README.md) | [Simplified Chinese](README.zh-CN.md)
 
-No third-party weights are redistributed in this package.
+No third-party model weights are redistributed. The principal experiment uses
+the standard pretrained CNN and ViT checkpoints loaded by the included
+torchvision/timm model wrappers. Configure cache locations when needed:
 
-Torchvision and timm download official pretrained weights automatically. Set
-cache locations if desired:
-
-```bash
+~~~bash
 export TORCH_HOME=$PWD/checkpoints/torch
 export HF_HOME=$PWD/checkpoints/huggingface
-```
+~~~
 
-For modern robust targets, `run_modern_robustbench_eval.py` loads registered
-models through RobustBench. Use `--model_dir ./checkpoints/robustbench
---allow_download` on the first run.
-
-`run_robust_table.py` covers legacy defenses and may require checkpoints from
-their original authors. Record the source URL and checksum for every manually
-downloaded checkpoint. The RobustBench runner is the recommended self-contained
-workflow for evaluating modern robust targets.
+Internet access is required when a checkpoint is not already cached. Preserve
+the package versions in environment.yml and requirements.txt because model
+registrations and preprocessing defaults can vary across releases.

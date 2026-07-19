@@ -1,145 +1,67 @@
-# Experiment Guide
+# Principal Transfer Experiment
 
-[English](EXPERIMENTS.md) | [简体中文](EXPERIMENTS.zh-CN.md)
+[English](EXPERIMENTS.md) | [Simplified Chinese](EXPERIMENTS.zh-CN.md)
 
-Run commands from the package root after `pip install -e .`.
+Run all commands from the repository root after installing the package.
 
-## Common Configuration
+## Protocol
 
-| Parameter | Value |
-|---|---:|
-| Norm | Linf |
-| Main budget | 16/255 |
-| Iterations | 10 |
-| Step size | epsilon / 10 |
-| Momentum | 1.0 |
-| EDA mesh | 3 x 3 |
-| EDA deformation scale | 0.45 |
-| Transformed views | 25 |
-| Main seed | 42 |
+| Item | Setting |
+|---|---|
+| Dataset | NIPS 2017 ImageNet-Compatible Dataset, 1,000 images |
+| Source models | RN-18, Inc-v3, Inc-v4, IncRes-v2 |
+| Target groups | 10 CNNs and 10 ViTs |
+| Norm and budget | Linf, 16/255 |
+| Iterations and step size | 10 and 1.6/255 |
+| Momentum and seed | 1.0 and 42 |
+| Matched transformed views | 25 |
+| EDA mesh and scale | 3 x 3 and 0.45 |
 
-CNN averages exclude a source-identical checkpoint. ViT averages include all
-ten targets when the source is a CNN.
+CNN group averages omit the source-identical checkpoint. ViT group averages
+include all ten ViT targets because the sources in this experiment are CNNs.
 
-## Main CNN-source Tables
+## Complete run
 
-Run each method separately:
+~~~bash
+python experiments/run_multi_source.py --mode both --attacks l2t,bsr,decowa,ops,sid,eda --sources resnet18,inception_v3,inception_v4,inception_resnet_v2 --input_dir ./data --output_root ./outputs/main --num_warping 25 --noise_scale 0.45 --GPU_ID 0
+~~~
 
-```bash
-for ATTACK in l2t bsr decowa ops sid eda; do
-  python experiments/run_multi_source.py \
-    --mode both --attack "$ATTACK" \
-    --sources resnet18,inception_v3,inception_v4,inception_resnet_v2 \
-    --input_dir ./data --output_root "./outputs/main/$ATTACK" \
-    --num_warping 25 --noise_scale 0.45 --GPU_ID 0
-done
-```
+## Separate generation and evaluation
 
-The runner maps 25 samples to each method's own argument. EDA's deformation
-scale is not passed to DeCoWA; DeCoWA retains its original setting.
+Generate only:
 
-## Multi-budget and Targeted Transfer
+~~~bash
+python experiments/run_multi_source.py --mode generate --attacks l2t,bsr,decowa,ops,sid,eda --sources resnet18,inception_v3,inception_v4,inception_resnet_v2 --input_dir ./data --output_root ./outputs/main --num_warping 25 --noise_scale 0.45 --GPU_ID 0
+~~~
 
-For a clean full reproduction, run all six attacks into a new output directory:
+Evaluate existing adversarial images only:
 
-```bash
-python experiments/run_budget_targeted_eda.py \
-  --mode untargeted_both \
-  --sources resnet18,inception_v3,inception_v4,inception_resnet_v2 \
-  --attacks l2t,bsr,decowa,ops,sid,eda \
-  --epsilons 4/255,8/255,12/255,16/255 \
-  --input_dir ./data --output_dir ./outputs/budget_targeted_full \
-  --num_warping 25 --GPU_ID 0
+~~~bash
+python experiments/run_multi_source.py --mode eval --attacks l2t,bsr,decowa,ops,sid,eda --sources resnet18,inception_v3,inception_v4,inception_resnet_v2 --input_dir ./data --output_root ./outputs/main --num_warping 25 --noise_scale 0.45 --GPU_ID 0
+~~~
 
-python experiments/run_budget_targeted_eda.py \
-  --mode targeted_both \
-  --sources resnet18,inception_v3,inception_v4,inception_resnet_v2 \
-  --attacks l2t,bsr,decowa,ops,sid,eda \
-  --epsilons 4/255,8/255,12/255,16/255 \
-  --input_dir ./data --output_dir ./outputs/budget_targeted_full \
-  --num_warping 25 --GPU_ID 0
-```
+To continue an interrupted generation, add --reuse_existing. The runner checks
+generation_meta.json and rejects reuse when the saved source, attack, seed,
+budget, step size, iteration count, or transformed-sample configuration differs
+from the requested protocol. Use --clean only when intentionally replacing a
+case directory.
 
-After both generation passes finish, validate the complete inventory and run
-evaluation only:
+## Method-specific mapping
 
-```bash
-python experiments/run_budget_targeted_eda.py \
-  --mode audit --input_dir ./data \
-  --output_dir ./outputs/budget_targeted_full
+The command-line name --num_warping is a common interface, not one shared
+internal parameter. The runner maps 25 to BSR num_scale, DeCoWA num_warping,
+SID num_scale, and EDA num_warping. L2T and OPS retain their original method
+settings. EDA noise_scale=0.45 is not passed to DeCoWA.
 
-python experiments/run_budget_targeted_eda.py \
-  --mode full_eval --input_dir ./data \
-  --output_dir ./outputs/budget_targeted_full --GPU_ID 0
-```
+## Outputs
 
-`full_eval` requires all six attacks and all 192 generation cases. It does not
-generate images. It writes `budget_targeted_results.csv`, the table-body rows,
-the complete LaTeX table, an analysis file, and a generation-audit CSV. Use
-`--resume_full_eval` only to resume an interrupted full evaluation. Without
-this option, existing adversarial images are reused but cached ASR values are
-discarded so that all six attacks are evaluated under one consistent protocol.
+Each attack/source directory contains the generated PNG images and
+generation_meta.json. The output root also contains:
 
-At `16/255`, untargeted values must match the main experiment when every
-generation setting is identical. A mismatch indicates mixed provenance or a
-configuration difference, not a different averaging convention.
+- results_eval_ATTACK_multi_source.txt: per-target ASR, timing, and group means.
+- results_eval_ATTACK_multi_source_analysis.txt: concise source-wise summary.
+- generation_time_ATTACK_multi_source.txt: generation-only timing summary.
 
-## Random-seed Stability
-
-```bash
-python experiments/run_seed_stability_eda.py \
-  --mode both --seeds 0,1,2,3,4 \
-  --sources resnet18,inception_v3,inception_v4,inception_resnet_v2 \
-  --attacks l2t,bsr,decowa,ops,sid,eda \
-  --input_dir ./data --output_dir ./outputs/seed_stability \
-  --num_warping 25 --GPU_ID 0
-```
-
-Every seed regenerates the adversarial examples. Results are reported as mean
-plus sample standard deviation.
-
-## Ablations
-
-```bash
-python experiments/run_parts_ablation_eda.py --mode both --input_dir ./data --output_dir ./outputs/ablation_parts --GPU_ID 0
-python experiments/run_layout_ablation_eda.py --mode both --input_dir ./data --output_dir ./outputs/ablation_layout --GPU_ID 0
-python experiments/run_expansion_ablation_eda.py --mode both --input_dir ./data --output_dir ./outputs/ablation_expansion --GPU_ID 0
-python experiments/run_appearance_ablation_eda.py --mode both --input_dir ./data --output_dir ./outputs/ablation_appearance --GPU_ID 0
-python experiments/tune_noise_scale_eda.py --mode both --input_dir ./data --output_dir ./outputs/noise_scale --GPU_ID 0
-```
-
-Use `python SCRIPT --help` for script-specific plot and output options.
-
-## Robustness and Perceptual Quality
-
-```bash
-python experiments/run_modern_robustbench_eval.py --mode both --input_dir ./data --output_dir ./outputs/robustbench --model_dir ./checkpoints/robustbench --allow_download --GPU_ID 0
-python experiments/run_perceptual_quality_eda.py --mode both --input_dir ./data --output_dir ./outputs/perceptual --GPU_ID 0 --allow_missing_optional_metrics
-```
-
-Perceptual metrics compare clean images with final adversarial images, not with
-intermediate TPS-warped views.
-
-## Combination with Gradient-Based Attacks
-
-```bash
-python experiments/run_gradient_eda_combination.py \
-  --mode both --sources resnet18 \
-  --methods vmifgsm,emifgsm,pgn,mef,gaa \
-  --variants base,eda --input_dir ./data \
-  --output_dir ./outputs/gradient_combination --GPU_ID 0
-```
-
-The runner compares each gradient-based attack with and without the EDA input
-transformation under the same source model, dataset, perturbation budget, and
-evaluation targets.
-
-## Larger and Shifted Datasets
-
-```bash
-python experiments/run_imagenet_val_generalization_eda.py --mode both --input_dir ./data_imagenet_val --output_dir ./outputs/imagenet_val --GPU_ID 0
-python experiments/run_imagenetv2_generalization_eda.py --mode both --input_dir ./data_imagenetv2_matched --output_dir ./outputs/imagenetv2 --GPU_ID 0
-```
-
-Use separate output directories per dataset and never merge partial CSV files
-from different seeds or script revisions.
+The evaluation covers VGG-19, RN-18, RN-50, RN-101, RNX-50, DN-121, MB-v2,
+Inc-v3, Inc-v4, IR-v2, ViT-B, DeiT-B, LeViT, PiT-B, CaiT-S, ConViT-B, TNT-S,
+Visformer-S, Swin-T, and CoaT-T.
