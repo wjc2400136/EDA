@@ -3,7 +3,7 @@ import random
 import torch
 import torch.nn.functional as F
 
-from ..gradient.mifgsm import MIFGSM
+from .._momentum import MomentumIterativeAttack
 from ..utils import *
 
 
@@ -107,7 +107,7 @@ def center_grid(width, height, device, dtype=torch.float32):
     return torch.stack([xx, yy], dim=-1).contiguous().view(-1, 2)
 
 
-class EDA(MIFGSM):
+class EDA(MomentumIterativeAttack):
     """
     Enhanced Deformation Attack aligned with the paper description.
 

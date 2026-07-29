@@ -3,9 +3,9 @@ import random
 import torchvision.transforms as T
 
 from ..utils import *
-from ..gradient.mifgsm import MIFGSM
+from .._momentum import MomentumIterativeAttack
 
-class BSR(MIFGSM):
+class BSR(MomentumIterativeAttack):
     """
     BSR Attack
     'Boosting Adversarial Transferability by Block Shuffle and Rotation'(https://https://arxiv.org/abs/2308.10299)

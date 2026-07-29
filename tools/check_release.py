@@ -1,5 +1,6 @@
 """Dependency-free checks for the reproducibility package."""
 
+import ast
 import re
 import sys
 from pathlib import Path
@@ -39,6 +40,15 @@ REQUIRED_FILES = {
     "environment.yml",
     "experiments/run_multi_source.py",
     "requirements.txt",
+}
+SUPPORTED_ATTACKS = ("l2t", "bsr", "decowa", "ops", "sid", "eda")
+TRANSFERATTACK_PY_FILES = {
+    "__init__.py",
+    "_momentum.py",
+    "attack.py",
+    "utils.py",
+    "input_transformation/__init__.py",
+    *(f"input_transformation/{name}.py" for name in SUPPORTED_ATTACKS),
 }
 SENSITIVE_PATTERNS = {
     "OpenAI-style secret": re.compile(r"\bsk-[A-Za-z0-9_-]{12,}"),
@@ -105,11 +115,46 @@ def check_markdown_links(errors):
                 errors.append(f"broken local link in {relative(path)}: {target}")
 
 
+def check_attack_scope(errors):
+    package = ROOT / "transferattack"
+    actual = {
+        path.relative_to(package).as_posix()
+        for path in package.rglob("*.py")
+        if "__pycache__" not in path.parts
+    }
+    for path in sorted(TRANSFERATTACK_PY_FILES - actual):
+        errors.append(f"missing transferattack support file: {path}")
+    for path in sorted(actual - TRANSFERATTACK_PY_FILES):
+        errors.append(f"unexpected transferattack method or module: {path}")
+
+    registry_path = package / "__init__.py"
+    try:
+        tree = ast.parse(registry_path.read_text(encoding="utf-8"))
+        assignment = next(
+            node
+            for node in tree.body
+            if isinstance(node, ast.Assign)
+            and any(
+                isinstance(target, ast.Name) and target.id == "attack_zoo"
+                for target in node.targets
+            )
+        )
+        registry = ast.literal_eval(assignment.value)
+    except (OSError, SyntaxError, StopIteration, ValueError) as exc:
+        errors.append(f"cannot read attack registry: {exc}")
+        return
+    if tuple(registry) != SUPPORTED_ATTACKS:
+        errors.append(
+            "attack registry must contain exactly: " + ", ".join(SUPPORTED_ATTACKS)
+        )
+
+
 def main():
     errors = []
     check_required(errors)
     check_files(errors)
     check_markdown_links(errors)
+    check_attack_scope(errors)
     if errors:
         print("Release check failed:")
         for error in errors:

@@ -3,7 +3,7 @@ import numpy as np
 import scipy.stats as st
 import torch.nn.functional as F
 from ..utils import *
-from ..gradient.mifgsm import MIFGSM
+from .._momentum import MomentumIterativeAttack
 import torchvision.transforms as T
 from torchvision import transforms as T
 
@@ -271,7 +271,7 @@ def multi_scale(x, resize_ratio):
 
 
 # Main attack class
-class SID(MIFGSM):
+class SID(MomentumIterativeAttack):
     """
     SID Attack (Spatial Inconsistency and Diversity Attack)
     Based on the implementation from the provided documents

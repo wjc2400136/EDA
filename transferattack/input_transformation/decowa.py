@@ -1,9 +1,9 @@
 import torch
 
 from ..utils import *
-from ..gradient.mifgsm import MIFGSM
+from .._momentum import MomentumIterativeAttack
 
-class DeCowA(MIFGSM):
+class DeCowA(MomentumIterativeAttack):
     """
     DeCowA(Wapring Attack)
     'Boosting Adversarial Transferability across Model Genus by Deformation-Constrained Warping (AAAI 2024)'(https://arxiv.org/abs/2402.03951)

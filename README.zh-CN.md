@@ -2,14 +2,15 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md)
 
-本匿名代码包包含 EDA 实现，以及复现论文主要 CNN 源模型迁移实验所需的代码。
-该流程使用四个 CNN 源模型生成对抗样本，并在主实验采用的十个 CNN 和十个
+本匿名代码包仅包含主要对比实际使用的六种攻击：L2T、BSR、DeCoWA、OPS、
+SID 和 EDA；公共优化与模型加载代码仅作为内部依赖保留。该流程使用四个
+CNN 源模型生成对抗样本，并在主实验采用的十个 CNN 和十个
 ViT 目标模型上评估。主要表格之外的补充分析不属于本代码包范围。
 
 ## 目录
 
 ~~~text
-transferattack/                 攻击实现和模型工具
+transferattack/                 六种攻击实现及公共工具
 experiments/run_multi_source.py 主要生成与评估入口
 data/                           标签与数据格式说明
 checkpoints/                    预训练权重说明

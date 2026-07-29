@@ -64,34 +64,14 @@ class Attack(object):
         Prioritize the model in torchvision.models, then timm.models
 
         Arguments:
-            model_name (str/list): the name of surrogate model in model_list in utils.py
+            model_name (str/list): the name of the surrogate model.
 
         Returns:
             model (torch.nn.Module): the surrogate model wrapped by wrap_model in utils.py
         """
 
         def load_single_model(model_name):
-            if model_name == "resnet50_l2_eps1":
-                from .MadryLab import model_utils as Madry_model_utils
-                from .MadryLab.datasets import ImageNet as Madry_ImageNet
-                print('=> Loading model {} from robust-imagenet-models'.format(model_name))
-                m, _ = Madry_model_utils.make_and_restore_model(
-                    arch='resnet50',
-                    dataset=Madry_ImageNet(''),
-                    resume_path="./robust-imagenet-models/resnet50_l2_eps1.ckpt"
-                )
-                model = m.model
-            elif model_name == "resnet50_l2_eps5":
-                from .MadryLab import model_utils as Madry_model_utils
-                from .MadryLab.datasets import ImageNet as Madry_ImageNet
-                print('=> Loading model {} from robust-imagenet-models'.format(model_name))
-                m, _ = Madry_model_utils.make_and_restore_model(
-                    arch='resnet50',
-                    dataset=Madry_ImageNet(''),
-                    resume_path="./robust-imagenet-models/resnet50_l2_eps5.ckpt"
-                )
-                model = m.model
-            elif model_name in models.__dict__.keys():
+            if model_name in models.__dict__.keys():
                 print('=> Loading model {} from torchvision.models'.format(model_name))
                 model = models.__dict__[model_name](weights="DEFAULT")
             elif model_name in timm.list_models():
@@ -145,20 +125,20 @@ class Attack(object):
 
     def get_logits(self, x, **kwargs):
         """
-        The inference stage, which should be overridden when the attack need to change the models (e.g., ensemble-model attack, ghost, etc.) or the input (e.g. DIM, SIM, etc.)
+        Return surrogate-model logits for the transformed input.
         """
         return self.model(x)
 
     def get_loss(self, logits, label):
         """
-        The loss calculation, which should be overrideen when the attack change the loss calculation (e.g., ATA, etc.)
+        Calculate the targeted or untargeted classification loss.
         """
         # Calculate the loss
         return -self.loss(logits, label) if self.targeted else self.loss(logits, label)
 
     def get_grad(self, loss, delta, **kwargs):
         """
-        The gradient calculation, which should be overridden when the attack need to tune the gradient (e.g., TIM, variance tuning, enhanced momentum, etc.)
+        Calculate the gradient with respect to the perturbation.
         """
         return torch.autograd.grad(loss, delta, retain_graph=False, create_graph=False)[0]
 

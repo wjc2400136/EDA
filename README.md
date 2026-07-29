@@ -2,8 +2,9 @@
 
 [English](README.md) | [Simplified Chinese](README.zh-CN.md)
 
-This anonymous package contains the EDA implementation and the code required to
-reproduce the principal CNN-source transfer experiments. It generates
+This anonymous package contains exactly the six attack methods used in the
+principal comparison: L2T, BSR, DeCoWA, OPS, SID, and EDA. Shared optimizer and
+model-loading code is retained only as internal support. The package generates
 adversarial examples with four CNN source models and evaluates them against the
 ten CNN and ten ViT targets used in the main comparison. Supplementary analyses
 outside these principal tables are not part of this package.
@@ -11,7 +12,7 @@ outside these principal tables are not part of this package.
 ## Contents
 
 ~~~text
-transferattack/                 attack implementations and model utilities
+transferattack/                 six attack implementations and shared utilities
 experiments/run_multi_source.py main generation and evaluation entry point
 data/                           labels and dataset-format instructions
 checkpoints/                    pretrained-weight instructions

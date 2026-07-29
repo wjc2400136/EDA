@@ -38,20 +38,9 @@ tgr_vit_model_list = ['vit_base_patch16_224', 'pit_b_224', 'cait_s24_224', 'visf
 generation_target_classes = [24, 99, 245, 344, 471, 555, 661, 701, 802, 919]
 
 
-def load_pretrained_model(cnn_model=[], vit_model=[], tf_robust_model=[]):
+def load_pretrained_model(cnn_model=(), vit_model=()):
     for model_name in cnn_model:
-        if model_name == "resnet50_l2_eps1":
-            raise RuntimeError(
-                "The legacy MadryLab robust-model loader is not included in this "
-                "principal-experiment package."
-            )
-        elif model_name == "resnet50_linf_eps4":
-            raise RuntimeError(
-                "The legacy MadryLab robust-model loader is not included in this "
-                "principal-experiment package."
-            )
-        else:
-            yield model_name, models.__dict__[model_name](weights="DEFAULT")
+        yield model_name, models.__dict__[model_name](weights="DEFAULT")
     for model_name in vit_model:
         yield model_name, timm.create_model(model_name, pretrained=True)
 
