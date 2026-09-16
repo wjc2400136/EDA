@@ -2,7 +2,7 @@
 
 [English](README.md) | [Simplified Chinese](README.zh-CN.md)
 
-This anonymous package contains exactly the six attack methods used in the
+This repository contains exactly the six attack methods used in the
 principal comparison: L2T, BSR, DeCoWA, OPS, SID, and EDA. Shared optimizer and
 model-loading code is retained only as internal support. The package generates
 adversarial examples with four CNN source models and evaluates them against the
